@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Poker</title>
+    
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #0d5617;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Modal de créditos inicial */
+        .credit-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .credit-modal.hidden {
+            display: none;
+        }
+
+        .credit-modal-content {
+            background-color: #0d5617; /* verde oliva #808000 - #0d5617 */
+            border: 2px solid gold; /* amarelo #FFD700 -  */
+            border-radius: 10px;
+            padding: 30px;
+            min-width: 350px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .credit-modal-content h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .credit-modal-content input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2rem;
+            border: 2px solid #FFD700;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .credit-modal-content input:focus {
+            outline: none;
+            border-color: #FFA500;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+
+        /* NOVO: Estilo para a imagem do logo no modal */
+        .credit-modal-logo {
+            width: 200px;
+            max-width: 80%;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .credit-modal-content button {
+            background-color: #c90c0c; /* vermelho */
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .credit-modal-content button:hover {
+            background-color: #ff0000;
+            transform: scale(1.05);
+        }
+
+        .credit-modal-content .error-message {
+            color: #ff0000;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            min-height: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Barra de título customizada */
+        .titlebar {
+            height: 32px;
+            background: linear-gradient(to bottom, #2d2d2d, #1a1a1a);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            -webkit-app-region: drag;
+            user-select: none;
+            border-bottom: 1px solid #000;
+        }
+
+        .titlebar-title {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .titlebar-buttons {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .titlebar-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .titlebar-button:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-close {
+            background: #ff5f57;
+        }
+
+        .btn-minimize {
+            background: #ffbd2e;
+        }
+
+        .btn-maximize {
+            background: #28c940;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 0.5vh 1vw 1vh 1vw; 
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5vh; 
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: clamp(1.2rem, 3vh, 2rem);
+        }
+
+        .credit-display {
+            font-size: clamp(1rem, 2.5vh, 1.5rem);
+            font-weight: bold;
+            color: yellow;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+        }
+
+        /* NOVO: Estilo para aposta atual */
+        .bet-display {
+            font-size: clamp(0.9rem, 2vh, 1.3rem);
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px 18px;
+            background-color: #c90c0c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: clamp(0.85rem, 2vh, 1rem);
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #ff0000;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-area {
+            display: flex;
+            gap: 2vw;
+            justify-content: center;
+            align-items: flex-start;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .combinations {
+            width: clamp(180px, 18vw, 220px);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1vh 1vw;
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .combinations h2 {
+            text-align: center;
+            margin-bottom: 1vh;
+            color: gold;
+            font-size: clamp(0.9rem, 2vh, 1.2rem);
+        }
+
+        .combination {
+            margin-bottom: 0.8vh;
+            padding: 0.8vh 0.5vw;
+            border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(0.75rem, 1.8vh, 1rem);
+            transition: all 0.3s;
+        }
+
+        .combination.active {
+            animation: blink 0.9s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.25; }
+            100% { opacity: 1; }
+        }
+
+        .cards-area {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(10px, 1.5vw, 20px);
+            padding: 1vh;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .card {
+            width: clamp(91px, 10.92vw, 127.4px); 
+            height: clamp(236.6px, 28.73vh, 338px); 
+            perspective: 1000px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        #gamble-card {
+            width: clamp(100px, 12vw, 140px);
+            height: clamp(140px, 17vh, 200px);
+        }
+
+        .card.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+        }
+
+        .card.is-face-up .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+            backface-visibility: hidden;
+        }
+
+        .card-front {
+            background-color: white;
+            color: black;
+            transform: rotateY(180deg);
+        }
+
+        .card-back {
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 35%),
+                radial-gradient(circle at 70% 70%, rgba(255,255,255,0.1), transparent 35%),
+                linear-gradient(135deg, #083b21, #0b6a32);
+            border: 2px solid #e0c16f;
+        }
+
+        .card-back-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(24px, 4vh, 42px);
+            color: #ffd700;
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.7);
+            letter-spacing: 6px;
+            user-select: none;
+        }
+
+        .card-front.red {
+            color: red;
+        }
+
+        .card-value-top, .card-value-bottom {
+            font-size: clamp(23px, 4vh, 36px); 
+            font-weight: bold;
+            position: absolute;
+        }
+
+        .card-value-top {
+            top: 8px;
+            left: 12px;
+        }
+
+        .card-value-bottom {
+            bottom: 8px;
+            right: 12px;
+            transform: rotate(180deg);
+        }
+
+        .card-suit {
+            font-size: clamp(47px, 8vh, 78px);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .card.selected::after {
+            content: "";
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: -10px;
+            height: 6px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #ff3b3b, #ffd700, #4caf50, #2196f3);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .card.selected.blinking::after {
+            animation: blinkBar 1s infinite;
+        }
+
+        @keyframes blinkBar {
+            0% { opacity: 1; transform: scaleY(1); }
+            50% { opacity: 0.3; transform: scaleY(0.5); }
+            100% { opacity: 1; transform: scaleY(1); }
+        }
+
+        .card.blinking .card-inner {
+            animation: blinkCardFlip 1s infinite;
+        }
+
+        @keyframes blinkCardFlip {
+            0% { transform: rotateY(180deg); }
+            50% { transform: rotateY(0deg); }
+            100% { transform: rotateY(180deg); }
+        }
+
+        .card.shuffling .card-inner {
+            animation: shuffleCard 0.3s ease-in-out;
+        }
+
+        @keyframes shuffleCard {
+            0%, 100% { transform: rotateY(0deg) translateX(0); }
+            25% { transform: rotateY(90deg) translateX(-20px); }
+            50% { transform: rotateY(180deg) translateX(0); }
+            75% { transform: rotateY(270deg) translateX(20px); }
+        }
+
+        .score {
+            text-align: center;
+            margin-top: 1vh;
+            font-size: clamp(1rem, 2.2vh, 1.4rem);
+            color: gold;
+            font-weight: bold;
+        }
+        
+        .bottom-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1vh 1vw;
+            margin-top: 1vh;
+        }
+
+        /* MODIFICADO: Container para informações da direita */
+        .right-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .bet-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .bet-button {
+            padding: 10px 15px;
+            background-color: #2196F3;
+            font-size: clamp(0.85rem, 2vh, 1rem);
+            min-width: 100px;
+        }
+
+        .bet-button:hover:not(:disabled) {
+            background-color: #1976D2;
+        }
+
+        .bet-button.hidden {
+            display: none;
+        }
+
+        .dois-pares { color: #4CAF50; }
+        .trinca { color: #F44336; }
+        .straight { color: #2196F3; }
+        .flush { color: #9C27B0; }
+        .full-house { color: #FF9800; }
+        .quadra { color: #00BCD4; }
+        .straight-flush { color: #E91E63; }
+        .royal-flush { color: #FFEB3B; }
+
+        .gamble-area {
+            display: none;
+            margin-top: 1vh;
+            padding: 1vh 1vw;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .gamble-area.active {
+            display: block;
+        }
+
+        .gamble-area h2 {
+            font-size: clamp(1rem, 2.5vh, 1.5rem);
+        }
+
+        .gamble-card-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1vh;
+            margin: 1vh 0;
+        }
+
+        .gamble-main-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .gamble-main-buttons button {
+            min-width: 120px;
+        }
+
+        .gamble-choice-buttons {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .gamble-choice-buttons.active {
+            display: flex;
+        }
+
+        .gamble-choice-buttons button {
+            background-color: #2196F3;
+            min-width: 150px;
+        }
+
+        .gamble-choice-buttons button:hover:not(:disabled) {
+            background-color: #1976D2;
+        }
+
+        .gamble-message {
+            font-size: clamp(0.9rem, 2vh, 1.3rem);
+            font-weight: bold;
+            margin-top: 1vh;
+            min-height: 30px;
+            color: #ffd700;
+        }
+
+        .video-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-overlay.active {
+            display: flex;
+        }
+
+        .video-overlay video {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        @media (max-width: 1024px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .combinations {
+                width: 90%;
+                max-width: 400px;
+                max-height: 25vh;
+            }
+
+            .cards-container {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .titlebar {
+                height: 28px;
+            }
+
+            .titlebar-button {
+                width: 10px;
+                height: 10px;
+            }
+
+            h1 {
+                margin-bottom: 0.5vh;
+            }
+
+            .card {
+                width: clamp(63.7px, 15.33vw, 89.18px);
+                height: clamp(147.5px, 35.63vh, 210.6px);
+            }
+
+            .combinations {
+                max-height: 20vh;
+            }
+
+            .bet-controls {
+                flex-wrap: wrap;
+            }
+
+            .right-info {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0.5vh 0.5vw;
+            }
+            
+            .card {
+                width: clamp(63.7px, 15.33vw, 89.18px);
+                height: clamp(147.5px, 35.63vh, 210.6px);
+            }
+
+            button {
+                padding: 8px 14px;
+            }
+        }
+
+        .combinations::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .combinations::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .combinations::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.5);
+            border-radius: 10px;
+        }
+    </style>    
+    
+</head>
+<body>
+    <!-- Modal de créditos inicial -->
+    <div class="credit-modal" id="credit-modal">
+        <div class="credit-modal-content">
+            <h2>Quantos créditos você deseja?</h2>
+            <input type="number" id="credit-input" placeholder="Digite um valor (mínimo 1)" min="1" step="1">
+            <!-- NOVO: Logo centralizado -->
+            <img src="imgs/FREE POKER.png" alt="Free Poker Logo" class="credit-modal-logo">
+            <div class="error-message" id="error-message"></div>
+            <button id="credit-ok-btn">OK</button>
+        </div>
+    </div>
+
+    <div class="titlebar">
+        <div class="titlebar-title">
+            <span>♠ ♥ ♦ ♣</span>
+            <span>Free Poker</span>
+        </div>
+        <div class="titlebar-buttons">
+            <button class="titlebar-button btn-close" onclick="window.close()" title="Fechar"></button>
+            <button class="titlebar-button btn-minimize" onclick="minimizeWindow()" title="Minimizar"></button>
+            <button class="titlebar-button btn-maximize" onclick="maximizeWindow()" title="Maximizar"></button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>******* FREE POKER *******</h1>
+
+        <div class="game-area">
+            <div class="combinations">
+                <h2>Jogadas</h2>
+                <div id="combinations-list"></div>
+            </div>
+
+            <div class="cards-area">
+                <div class="cards-container" id="cards-container"></div>
+            </div>
+        </div>
+        
+        <div class="bottom-controls">
+            <div class="bet-controls">
+                <button id="btn-bet-minus" class="bet-button hidden">Apostar -</button>
+                <button id="generate-hand">Nova Rodada</button>
+                <button id="btn-bet-plus" class="bet-button hidden">Apostar +</button>
+            </div>
+            <!-- MODIFICADO: Agrupado créditos e aposta -->
+            <div class="right-info">
+                <div class="credit-display" id="credit-display">Créditos = 0</div>
+                <div class="bet-display" id="bet-display">Aposta atual: 05</div>
+            </div>
+        </div>
+
+        <div class="score" id="score">Pontuação: 0</div>
+
+        <div class="gamble-area" id="gamble-area">
+            <h2 style="color: gold; margin-bottom: 1vh;">Deseja Dobrar?</h2>
+            <div class="gamble-card-container">
+                <div class="card" id="gamble-card">
+                    <div class="card-inner">
+                        <div class="card-face card-back">
+                            <div class="card-back-logo">♠ ♥ ♦ ♣</div>
+                        </div>
+                        <div class="card-face card-front">
+                            <div class="card-value-top"></div>
+                            <div class="card-suit"></div>
+                            <div class="card-value-bottom"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="gamble-main-buttons">
+                    <button id="btn-dobrar">Dobrar</button>
+                    <button id="btn-nao-dobrar">Não Dobrar</button>
+                </div>
+                <div class="gamble-choice-buttons" id="gamble-choice-buttons">
+                    <button id="btn-low">Low (A-6)</button>
+                    <button id="btn-high">High (8-K)</button>
+                </div>
+            </div>
+            <div class="gamble-message" id="gamble-message"></div>
+        </div>
+    </div>
+
+    <div class="video-overlay" id="video-overlay">
+        <video id="celebration-video" preload="auto">
+            <source src="video/Asdefogo.mp4" type="video/mp4">
+            <source src="video/Asdefogo.webm" type="video/webm">
+            Seu navegador não suporta vídeo HTML5.
+        </video>
+    </div>
+
+    <script>
+        function minimizeWindow() {
+            if (window.electronAPI) {
+                window.electronAPI.minimize();
+            } else {
+                alert('Função disponível apenas em aplicativo desktop');
+            }
+        }
+
+        function maximizeWindow() {
+            if (window.electronAPI) {
+                window.electronAPI.maximize();
+            } else {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen();
+                }
+            }
+        }
+
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+        const valueScores = {
+            '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+            '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14
+        };
+
+        const cardsContainer = document.getElementById('cards-container');
+        const combinationsList = document.getElementById('combinations-list');
+        const generateHandBtn = document.getElementById('generate-hand');
+        const scoreElement = document.getElementById('score');
+        const creditDisplay = document.getElementById('credit-display');
+        const betDisplay = document.getElementById('bet-display');
+        const gambleArea = document.getElementById('gamble-area');
+        const gambleCard = document.getElementById('gamble-card');
+        const btnDobrar = document.getElementById('btn-dobrar');
+        const btnNaoDobrar = document.getElementById('btn-nao-dobrar');
+        const gambleChoiceButtons = document.getElementById('gamble-choice-buttons');
+        const gambleMainButtons = document.querySelector('.gamble-main-buttons');
+        const btnLow = document.getElementById('btn-low');
+        const btnHigh = document.getElementById('btn-high');
+        const gambleMessage = document.getElementById('gamble-message');
+        const videoOverlay = document.getElementById('video-overlay');
+        const celebrationVideo = document.getElementById('celebration-video');
+        const btnBetPlus = document.getElementById('btn-bet-plus');
+        const btnBetMinus = document.getElementById('btn-bet-minus');
+        const creditModal = document.getElementById('credit-modal');
+        const creditInput = document.getElementById('credit-input');
+        const creditOkBtn = document.getElementById('credit-ok-btn');
+        const errorMessage = document.getElementById('error-message');
+
+        let currentHand = [null, null, null, null, null];
+        let hasDealt = false;
+        let score = 0;
+        let credit = 0; 
+        let cardEls = [];
+        let selectedCards = [];
+        let canSelectCards = false;
+        let gambleCardData = null;
+        let isInGambleMode = false;
+        let consecutiveWins = 0;
+        let totalConsecutiveWins = 0;
+        let betMultiplier = 1;
+        let shouldFlipToBackOnVirar = false;
+
+        // Sistema de sons
+        const sounds = {
+            novaRodada: new Audio('sounds/NOVA_RODADA.mp3'),
+            virandoCartas: new Audio('sounds/VIRANDO_CARTAS.mp3'),
+            cartasViradas: new Audio('sounds/CARTAS_VIRAREM.mp3'),
+            jogadaFeita: new Audio('sounds/JOGADA_FEITA.mp3'),
+            dobrarVitoria: new Audio('sounds/DOBRAR_VITORIA.mp3'),
+            dobrarDerrota: new Audio('sounds/DOBRAR_DERROTA.mp3'),
+            dinheiroCredito: new Audio('sounds/DINHEIRO_CREDITO.mp3'),
+            gameOver: new Audio('sounds/GAME_OVER.mp3'),
+            marcarCarta: new Audio('sounds/MARCAR_CARTA.mp3'),
+            desmarcarCarta: new Audio('sounds/DESMARCAR_CARTA.mp3'),
+            apostarMais: new Audio('sounds/ApostarMais.mp3'),
+            apostarMenos: new Audio('sounds/ApostarMenos.mp3')
+        };
+
+        function playSound(sound) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Erro ao tocar som:', e));
+        }
+
+        function playCelebrationVideo() {
+            videoOverlay.classList.add('active');
+            celebrationVideo.currentTime = 0;
+            celebrationVideo.play();
+            
+            setTimeout(() => {
+                celebrationVideo.pause();
+                videoOverlay.classList.remove('active');
+            }, 5000);
+        }
+
+        function shuffleGambleCard() {
+            return new Promise((resolve) => {
+                let shuffleCount = 0;
+                const maxShuffles = 3;
+                
+                function shuffle() {
+                    if (shuffleCount < maxShuffles) {
+                        gambleCard.classList.add('shuffling');
+                        
+                        setTimeout(() => {
+                            gambleCard.classList.remove('shuffling');
+                            shuffleCount++;
+                            
+                            if (shuffleCount < maxShuffles) {
+                                setTimeout(shuffle, 100);
+                            } else {
+                                resolve();
+                            }
+                        }, 300);
+                    }
+                }
+                
+                shuffle();
+            });
+        }
+
+        // Modal de créditos inicial
+        creditOkBtn.addEventListener('click', handleCreditInput);
+        creditInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleCreditInput();
+            }
+        });
+
+        function handleCreditInput() {
+            const value = parseInt(creditInput.value);
+            
+            // Validação
+            if (isNaN(value) || value <= 0 || !Number.isInteger(value)) {
+                errorMessage.textContent = 'Por favor, digite um número inteiro maior que zero!';
+                creditInput.focus();
+                return;
+            }
+            
+            // Valor válido
+            credit = value;
+            creditModal.classList.add('hidden');
+            updateCreditDisplay();
+            initializeGame();
+        }
+
+        // Focar no input quando a página carregar
+        window.addEventListener('load', () => {
+            creditInput.focus();
+        });
+
+        function initializeGame() {
+            setupCombinationsList();
+            createBackCards();
+            updateCreditDisplay();
+            updateBetDisplay();
+            generateHandBtn.addEventListener('click', handleButtonClick);
+            btnDobrar.addEventListener('click', handleDobrar);
+            btnNaoDobrar.addEventListener('click', handleNaoDobrar);
+            btnLow.addEventListener('click', () => handleChoice('low'));
+            btnHigh.addEventListener('click', () => handleChoice('high'));
+            btnBetPlus.addEventListener('click', increaseBet);
+            btnBetMinus.addEventListener('click', decreaseBet);
+        }
+
+        function updateCreditDisplay() {
+            creditDisplay.textContent = `Créditos = ${credit}`; 
+        }
+
+        function increaseBet() {
+            betMultiplier++;
+            playSound(sounds.apostarMais);
+            updateBetDisplay();
+            setupCombinationsList();
+        }
+
+        function decreaseBet() {
+            if (betMultiplier > 1) {
+                betMultiplier--;
+                playSound(sounds.apostarMenos);
+                updateBetDisplay();
+                setupCombinationsList();
+            }
+        }
+
+        function updateBetDisplay() {
+            const baseCost = 5;
+            const currentCost = baseCost * betMultiplier;
+            betDisplay.textContent = `Aposta atual: ${String(currentCost).padStart(2, '0')}`;
+        }
+
+        function toggleBetButtons(show) {
+            if (show) {
+                btnBetPlus.classList.remove('hidden');
+                btnBetMinus.classList.remove('hidden');
+            } else {
+                btnBetPlus.classList.add('hidden');
+                btnBetMinus.classList.add('hidden');
+            }
+        }
+
+        function setupCombinationsList() {
+            const combos = [
+                { name: "Royal Flush", class: "royal-flush", check: checkRoyalFlush, basePoints: 100 },
+                { name: "Straight Flush", class: "straight-flush", check: checkStraightFlush, basePoints: 90 },
+                { name: "Quadra", class: "quadra", check: checkFourOfAKind, basePoints: 80 },
+                { name: "Full House", class: "full-house", check: checkFullHouse, basePoints: 70 },
+                { name: "Flush", class: "flush", check: checkFlush, basePoints: 60 },
+                { name: "Straight", class: "straight", check: checkStraight, basePoints: 50 },
+                { name: "Trinca", class: "trinca", check: checkThreeOfAKind, basePoints: 40 },
+                { name: "Dois Pares", class: "dois-pares", check: checkTwoPairs, basePoints: 30 }
+            ];
+
+            combinationsList.innerHTML = '';
+            combos.forEach(c => {
+                const el = document.createElement('div');
+                el.className = `combination ${c.class}`;
+                el.id = `comb-${c.class}`;
+                const points = c.basePoints * betMultiplier;
+                el.textContent = `${c.name} = ${points}`;
+                combinationsList.appendChild(el);
+            });
+        }
+
+        function createBackCards() {
+            cardsContainer.innerHTML = '';
+            cardEls = [];
+            selectedCards = [];
+            for (let i = 0; i < 5; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = i;
+
+                const inner = document.createElement('div');
+                inner.className = 'card-inner';
+
+                const back = document.createElement('div');
+                back.className = 'card-face card-back';
+                back.innerHTML = `<div class="card-back-logo">♠ ♥ ♦ ♣</div>`;
+
+                const front = document.createElement('div');
+                front.className = 'card-face card-front';
+                front.innerHTML = `
+                    <div class="card-value-top"></div>
+                    <div class="card-suit"></div>
+                    <div class="card-value-bottom"></div>
+                `;
+
+                inner.appendChild(back);
+                inner.appendChild(front);
+                card.appendChild(inner);
+                cardsContainer.appendChild(card);
+
+                card.addEventListener('click', () => {
+                    if (!canSelectCards) return;
+                    
+                    if (card.classList.contains('selected')) {
+                        card.classList.remove('selected');
+                        selectedCards = selectedCards.filter(index => index !== i);
+                        playSound(sounds.desmarcarCarta);
+                    } else {
+                        card.classList.add('selected');
+                        selectedCards.push(i);
+                        playSound(sounds.marcarCarta);
+                    }
+                    
+                    updateButtonText();
+                });
+
+                cardEls.push(card);
+            }
+            resetCombinationsVisual();
+        }
+
+        function resetCombinationsVisual() {
+            document.querySelectorAll('.combination').forEach(el => el.classList.remove('active'));
+            score = 0;
+            scoreElement.textContent = "Pontuação: 0";
+        }
+
+        function updateButtonText() {
+            if (hasDealt && selectedCards.length > 0) {
+                generateHandBtn.textContent = 'Virar Cartas';
+            } else if (hasDealt) {
+                generateHandBtn.textContent = 'Nova Rodada';
+            } else {
+                generateHandBtn.textContent = 'Nova Rodada';
+            }
+        }
+
+        function handleButtonClick() {
+            if (isInGambleMode) return;
+
+            if (!hasDealt) {
+                playSound(sounds.novaRodada);
+                
+                const roundCost = 5 * betMultiplier;
+                
+                if (credit < roundCost) {
+                    alert('Crédito insuficiente!');
+                    playSound(sounds.gameOver);
+                    return;
+                }
+                credit -= roundCost;
+                updateCreditDisplay();
+
+                const hand = getUniqueCards(5, new Set());
+                for (let i = 0; i < 5; i++) {
+                    setCardFace(cardEls[i], hand[i]);
+                    flipToFront(cardEls[i]);
+                    currentHand[i] = hand[i];
+                }
+                
+                setTimeout(() => {
+                    playSound(sounds.cartasViradas);
+                }, 300);
+                
+                hasDealt = true;
+                canSelectCards = true;
+                toggleBetButtons(false);
+                updateButtonText();
+            } else if (selectedCards.length > 0) {
+                if (shouldFlipToBackOnVirar) {
+                    cardEls.forEach(card => {
+                        flipToBack(card);
+                    });
+                    
+                    setTimeout(() => {
+                        cardEls.forEach(card => {
+                            flipToFront(card);
+                        });
+                        
+                        shouldFlipToBackOnVirar = false;
+                        
+                        setTimeout(() => {
+                            processCardFlip();
+                        }, 300);
+                    }, 600);
+                } else {
+                    processCardFlip();
+                }
+            } else {
+                newRound();
+            }
+        }
+
+        function processCardFlip() {
+            playSound(sounds.virandoCartas);
+            
+            canSelectCards = false;
+            
+            const heldSet = new Set();
+            for (let i = 0; i < 5; i++) {
+                if (cardEls[i].classList.contains('selected') && currentHand[i]) {
+                    heldSet.add(cardKey(currentHand[i]));
+                }
+            }
+            
+            const toReplaceIndices = [];
+            for (let i = 0; i < 5; i++) {
+                if (!cardEls[i].classList.contains('selected')) {
+                    toReplaceIndices.push(i);
+                }
+            }
+            const newCards = getUniqueCards(toReplaceIndices.length, heldSet);
+
+            toReplaceIndices.forEach((idx, j) => {
+                const cardEl = cardEls[idx];
+                flipToBack(cardEl);
+                setTimeout(() => {
+                    setCardFace(cardEl, newCards[j]);
+                    flipToFront(cardEl);
+                    currentHand[idx] = newCards[j];
+                }, 300);
+            });
+
+            setTimeout(() => {
+                playSound(sounds.cartasViradas);
+            }, 600);
+
+            setTimeout(() => {
+                const hasWinningCombination = checkCombinations();
+                
+                if (hasWinningCombination) {
+                    playSound(sounds.jogadaFeita);
+                    
+                    setTimeout(() => {
+                        canSelectCards = false;
+                        generateHandBtn.disabled = true;
+                        showGambleArea();
+                    }, 100);
+                } else {
+                    cardEls.forEach(card => {
+                        card.classList.remove('selected');
+                        card.classList.add('disabled');
+                    });
+                    selectedCards = [];
+                    canSelectCards = false;
+                    updateButtonText();
+                    toggleBetButtons(true);
+                    
+                    if (credit === 0) {
+                        setTimeout(() => {
+                            playSound(sounds.gameOver);
+                            alert('GAME OVER! Seus créditos acabaram!');
+                        }, 500);
+                    }
+                }
+            }, 900);
+        }
+
+        function showGambleArea() {
+            isInGambleMode = true;
+            gambleArea.classList.add('active');
+            gambleMessage.textContent = '';
+            
+            const usedCards = new Set(currentHand.map(c => cardKey(c)));
+            const newCard = getUniqueCards(1, usedCards)[0];
+            gambleCardData = newCard;
+            
+            gambleCard.classList.remove('is-face-up');
+            setCardFace(gambleCard, newCard);
+            
+            btnDobrar.disabled = false;
+            btnNaoDobrar.disabled = false;
+            gambleMainButtons.style.display = 'flex';
+            gambleChoiceButtons.classList.remove('active');
+            btnLow.disabled = false;
+            btnHigh.disabled = false;
+        }
+
+        function hideGambleArea() {
+            gambleArea.classList.remove('active');
+            gambleChoiceButtons.classList.remove('active');
+            gambleMainButtons.style.display = 'flex';
+            isInGambleMode = false;
+            consecutiveWins = 0;
+        }
+
+        function handleDobrar() {
+            btnDobrar.disabled = true;
+            btnNaoDobrar.disabled = true;
+            gambleMainButtons.style.display = 'none';
+            gambleChoiceButtons.classList.add('active');
+            gambleMessage.textContent = 'Escolha Low ou High!';
+        }
+
+        function handleNaoDobrar() {
+            playSound(sounds.dinheiroCredito);
+            
+            credit += score;
+            updateCreditDisplay();
+            
+            score = 0;
+            scoreElement.textContent = "Pontuação: 0";
+            
+            stopBlinking();
+            hideGambleArea();
+            
+            canSelectCards = false;
+            cardEls.forEach(card => {
+                card.classList.remove('selected');
+                card.classList.add('disabled');
+            });
+            
+            generateHandBtn.disabled = false;
+            updateButtonText();
+            shouldFlipToBackOnVirar = true;
+            toggleBetButtons(true);
+            
+            consecutiveWins = 0;
+            totalConsecutiveWins = 0;
+        }
+
+        async function handleChoice(choice) {
+            btnLow.disabled = true;
+            btnHigh.disabled = true;
+            
+            flipToFront(gambleCard);
+            
+            setTimeout(async () => {
+                const cardValue = gambleCardData.value;
+                let won = false;
+                
+                if (cardValue === '7') {
+                    score = 0;
+                    scoreElement.textContent = `Pontuação: ${score}`;
+                    gambleMessage.textContent = '🃏 Carta 7 rouba pontuação!';
+                    gambleMessage.style.color = '#FF4500';
+                    
+                    playSound(sounds.dobrarDerrota);
+                    stopBlinking();
+                    consecutiveWins = 0;
+                    totalConsecutiveWins = 0;
+                    
+                    setTimeout(() => {
+                        const usedCards = new Set(currentHand.map(c => cardKey(c)));
+                        const newCard = getUniqueCards(1, usedCards)[0];
+                        gambleCardData = newCard;
+                        
+                        flipToBack(gambleCard);
+                        setCardFace(gambleCard, newCard);
+                        
+                        gambleChoiceButtons.classList.remove('active');
+                        gambleMainButtons.style.display = 'flex';
+                        btnDobrar.disabled = false;
+                        btnNaoDobrar.disabled = false;
+                        btnLow.disabled = false;
+                        btnHigh.disabled = false;
+                        
+                        gambleMessage.textContent = 'Deseja continuar dobrando?';
+                        gambleMessage.style.color = '#ffd700';
+                    }, 400);
+                    
+                    return;
+                }
+                
+                if (choice === 'low') {
+                    const lowValues = ['A', '2', '3', '4', '5', '6'];
+                    won = lowValues.includes(cardValue);
+                } else {
+                    const highValues = ['8', '9', '10', 'J', 'Q', 'K'];
+                    won = highValues.includes(cardValue);
+                }
+                
+                if (won) {
+                    playSound(sounds.dobrarVitoria);
+                    
+                    score *= 2;
+                    scoreElement.textContent = `Pontuação: ${score}`;
+                    gambleMessage.textContent = '🎉 VOCÊ GANHOU! Pontuação dobrada!';
+                    gambleMessage.style.color = '#4CAF50';
+                    
+                    consecutiveWins++;
+                    totalConsecutiveWins++;
+                    
+                    if (totalConsecutiveWins === 4) {
+                        setTimeout(() => {
+                            playCelebrationVideo();
+                            totalConsecutiveWins = 0;
+                        }, 1000);
+                    }
+                    
+                    setTimeout(async () => {
+                        flipToBack(gambleCard);
+                        
+                        if (consecutiveWins >= 3) {
+                            await shuffleGambleCard();
+                            consecutiveWins = 0;
+                        }
+                        
+                        showGambleArea();
+                    }, 1000);
+                } else {
+                    playSound(sounds.dobrarDerrota);
+                    
+                    score = 0;
+                    scoreElement.textContent = "Pontuação: 0";
+                    gambleMessage.textContent = '😢 VOCÊ PERDEU! Pontuação zerada!';
+                    gambleMessage.style.color = '#F44336';
+                    
+                    stopBlinking();
+                    consecutiveWins = 0;
+                    totalConsecutiveWins = 0;
+                    
+                    setTimeout(() => {
+                        hideGambleArea();
+                        
+                        canSelectCards = false;
+                        cardEls.forEach(card => {
+                            card.classList.remove('selected');
+                            card.classList.add('disabled');
+                        });
+                        
+                        generateHandBtn.disabled = false;
+                        updateButtonText();
+                        toggleBetButtons(true);
+                        
+                        if (credit === 0) {
+                            setTimeout(() => {
+                                playSound(sounds.gameOver);
+                                alert('GAME OVER! Seus créditos acabaram!');
+                            }, 500);
+                        }
+                    }, 2000);
+                }
+            }, 600);
+        }
+
+        function stopBlinking() {
+            cardEls.forEach(card => {
+                card.classList.remove('blinking', 'selected');
+            });
+            document.querySelectorAll('.combination').forEach(el => el.classList.remove('active'));
+        }
+
+        function newRound() {
+            cardEls.forEach(card => {
+                card.classList.remove('selected', 'blinking', 'disabled');
+            });
+            
+            selectedCards = [];
+            hasDealt = false;
+            canSelectCards = false;
+            isInGambleMode = false;
+            shouldFlipToBackOnVirar = false;
+            hideGambleArea();
+            createBackCards();
+            generateHandBtn.disabled = false;
+            updateButtonText();
+            toggleBetButtons(true);
+            
+            consecutiveWins = 0;
+            totalConsecutiveWins = 0;
+        }
+
+        function cardKey(card) {
+            return `${card.value}|${card.suit}`;
+        }
+
+        function getUniqueCards(count, excludeSet) {
+            const result = [];
+            const used = new Set(excludeSet);
+            let guard = 0;
+            while (result.length < count && guard < 1000) {
+                guard++;
+                const suit = suits[Math.floor(Math.random() * suits.length)];
+                const value = values[Math.floor(Math.random() * values.length)];
+                const key = `${value}|${suit}`;
+                if (!used.has(key)) {
+                    used.add(key);
+                    result.push({ value, suit });
+                }
+            }
+            return result;
+        }
+
+        function setCardFace(cardEl, cardData) {
+            const front = cardEl.querySelector('.card-front');
+            const valTop = cardEl.querySelector('.card-value-top');
+            const valBottom = cardEl.querySelector('.card-value-bottom');
+            const suitEl = cardEl.querySelector('.card-suit');
+
+            valTop.textContent = cardData.value;
+            valBottom.textContent = cardData.value;
+            suitEl.textContent = cardData.suit;
+
+            const isRed = cardData.suit === '♥' || cardData.suit === '♦';
+            front.classList.toggle('red', isRed);
+
+            cardEl.dataset.value = cardData.value;
+            cardEl.dataset.suit = cardData.suit;
+        }
+
+        function flipToFront(cardEl) {
+            cardEl.classList.add('is-face-up');
+        }
+
+        function flipToBack(cardEl) {
+            cardEl.classList.remove('is-face-up');
+        }
+
+        function checkCombinations() {
+            if (!hasDealt || currentHand.some(c => c === null)) return false;
+
+            document.querySelectorAll('.combination').forEach(el => el.classList.remove('active'));
+            score = 0;
+
+            const combos = [
+                { class: "royal-flush", check: checkRoyalFlush, points: 100 * betMultiplier },
+                { class: "straight-flush", check: checkStraightFlush, points: 90 * betMultiplier },
+                { class: "quadra", check: checkFourOfAKind, points: 80 * betMultiplier },
+                { class: "full-house", check: checkFullHouse, points: 70 * betMultiplier },
+                { class: "flush", check: checkFlush, points: 60 * betMultiplier },
+                { class: "straight", check: checkStraight, points: 50 * betMultiplier },
+                { class: "trinca", check: checkThreeOfAKind, points: 40 * betMultiplier },
+                { class: "dois-pares", check: checkTwoPairs, points: 30 * betMultiplier }
+            ];
+
+            let found = false;
+            let winningCombination = null;
+            
+            for (const comb of combos) {
+                if (comb.check(currentHand)) {
+                    document.getElementById(`comb-${comb.class}`).classList.add('active');
+                    score += comb.points;
+                    found = true;
+                    winningCombination = comb;
+                    if (comb.points >= 70 * betMultiplier) break;
+                }
+            }
+
+            if (!found && checkOnePair(currentHand)) {
+                score += 20 * betMultiplier;
+            }
+
+            scoreElement.textContent = `Pontuação: ${score}`;
+            
+            if (found) {
+                highlightWinningCards(winningCombination);
+            }
+            
+            return found;
+        }
+
+        function highlightWinningCards(combination) {
+            cardEls.forEach(card => {
+                card.classList.remove('blinking', 'selected');
+            });
+            
+            selectedCards = [];
+            const winningIndices = getWinningCardIndices(combination);
+            
+            winningIndices.forEach(index => {
+                cardEls[index].classList.add('blinking', 'selected');
+                selectedCards.push(index);
+            });
+        }
+
+        function getWinningCardIndices(combination) {
+            const indices = [];
+            
+            switch(combination.class) {
+                case 'royal-flush':
+                case 'straight-flush':
+                case 'flush':
+                case 'straight':
+                    return [0, 1, 2, 3, 4];
+                    
+                case 'quadra':
+                    const valueCount = {};
+                    currentHand.forEach((card, idx) => {
+                        if (!valueCount[card.value]) valueCount[card.value] = [];
+                        valueCount[card.value].push(idx);
+                    });
+                    
+                    for (const value in valueCount) {
+                        if (valueCount[value].length === 4) {
+                            return valueCount[value];
+                        }
+                    }
+                    break;
+                    
+                case 'full-house':
+                    return [0, 1, 2, 3, 4];
+                    
+                case 'trinca':
+                    const trincaCount = {};
+                    currentHand.forEach((card, idx) => {
+                        if (!trincaCount[card.value]) trincaCount[card.value] = [];
+                        trincaCount[card.value].push(idx);
+                    });
+                    
+                    for (const value in trincaCount) {
+                        if (trincaCount[value].length === 3) {
+                            return trincaCount[value];
+                        }
+                    }
+                    break;
+                    
+                case 'dois-pares':
+                    const pairsCount = {};
+                    currentHand.forEach((card, idx) => {
+                        if (!pairsCount[card.value]) pairsCount[card.value] = [];
+                        pairsCount[card.value].push(idx);
+                    });
+                    
+                    const pairs = [];
+                    for (const value in pairsCount) {
+                        if (pairsCount[value].length === 2) {
+                            pairs.push(...pairsCount[value]);
+                        }
+                    }
+                    
+                    if (pairs.length === 4) {
+                        return pairs;
+                    }
+                    break;
+            }
+            
+            return indices;
+        }
+
+        function checkRoyalFlush(hand) {
+            if (!checkFlush(hand)) return false;
+            const req = ['10', 'J', 'Q', 'K', 'A'];
+            const vals = hand.map(c => c.value);
+            return req.every(v => vals.includes(v));
+        }
+
+        function checkStraightFlush(hand) {
+            return checkFlush(hand) && checkStraight(hand);
+        }
+
+        function checkFourOfAKind(hand) {
+            const count = {};
+            hand.forEach(c => count[c.value] = (count[c.value] || 0) + 1);
+            return Object.values(count).some(n => n === 4);
+        }
+
+        function checkFullHouse(hand) {
+            const count = {};
+            hand.forEach(c => count[c.value] = (count[c.value] || 0) + 1);
+            const vals = Object.values(count);
+            return vals.includes(3) && vals.includes(2);
+        }
+
+        function checkFlush(hand) {
+            const s = hand[0].suit;
+            return hand.every(c => c.suit === s);
+        }
+
+        function checkStraight(hand) {
+            const nums = hand.map(c => valueScores[c.value]).sort((a, b) => a - b);
+            let consecutive = true;
+            for (let i = 0; i < nums.length - 1; i++) {
+                if (nums[i + 1] - nums[i] !== 1) {
+                    consecutive = false;
+                    break;
+                }
+            }
+            const aceLow = [2, 3, 4, 5, 14];
+            const isAceLow = nums.length === 5 && nums.every((n, i) => n === aceLow[i]);
+            return consecutive || isAceLow;
+        }
+
+        function checkThreeOfAKind(hand) {
+            const count = {};
+            hand.forEach(c => count[c.value] = (count[c.value] || 0) + 1);
+            return Object.values(count).some(n => n === 3);
+        }
+
+        function checkTwoPairs(hand) {
+            const count = {};
+            hand.forEach(c => count[c.value] = (count[c.value] || 0) + 1);
+            let pairs = 0;
+            Object.values(count).forEach(n => { if (n === 2) pairs++; });
+            return pairs === 2;
+        }
+
+        function checkOnePair(hand) {
+            const count = {};
+            hand.forEach(c => count[c.value] = (count[c.value] || 0) + 1);
+            return Object.values(count).some(n => n === 2);
+        }
+    </script>
+</body>
+</html>
